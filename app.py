@@ -1,44 +1,36 @@
-import os
 import streamlit as st
 import pandas as pd
-from azure.ai.formrecognizer import DocumentAnalysisClient
-from azure.core.credentials import AzureKeyCredential
-from dotenv import load_dotenv
 from PIL import Image
-from io import BytesIO
-import base64
 
-load_dotenv()
-endpoint = os.getenv("AZURE_ENDPOINT")
-key = os.getenv("AZURE_KEY")
+st.set_page_config(page_title="名片辨識預覽", layout="centered")
 
-client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(key))
+st.title("📇 名片辨識即時預覽")
 
-st.set_page_config(page_title="Business Card Analyzer", page_icon="📇")
-st.title("📇 名片辨識 App（Azure Form Recognizer）")
-uploaded_files = st.file_uploader("請上傳名片圖片（支援多檔）", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+# 上傳圖片
+uploaded_file = st.file_uploader("請上傳名片圖片（JPG / PNG）", type=["jpg", "jpeg", "png"])
 
-results = []
-if uploaded_files:
-    for file in uploaded_files:
-        image_bytes = file.read()
-        poller = client.begin_analyze_document("prebuilt-businessCard", document=image_bytes)
-        result = poller.result()
+if uploaded_file:
+    image = Image.open(uploaded_file)
+    st.image(image, caption="上傳的名片", use_column_width=True)
 
-        for doc in result.documents:
-            fields = {k: v.value if v else "" for k, v in doc.fields.items()}
-            fields["檔案名稱"] = file.name
-            results.append(fields)
+    # 模擬辨識結果（實際應接 Azure AI）
+    st.subheader("🔍 分析結果（模擬資料）")
 
-    df = pd.DataFrame(results)
-    st.success("✅ 辨識完成")
-    st.dataframe(df)
+    data = {
+        "FirstName": ["Tom"],
+        "LastName": ["Chen"],
+        "CompanyName": ["OpenAI Taiwan"],
+        "JobTitle": ["AI Engineer"],
+        "Email": ["tom@example.com"],
+        "Phone": ["+886-912-345-678"]
+    }
 
-    def to_excel(df):
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False)
-        return output.getvalue()
+    df = pd.DataFrame(data)
 
-    excel_data = to_excel(df)
-    st.download_button("📥 下載 Excel 檔", data=excel_data, file_name="business_cards.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    st.dataframe(df, use_container_width=True)
+
+    # 匯出 Excel
+    if st.button("📤 匯出成 Excel"):
+        df.to_excel("business_card_output.xlsx", index=False)
+        with open("business_card_output.xlsx", "rb") as f:
+            st.download_button("下載 Excel 檔", f, file_name="business_card_output.xlsx")
