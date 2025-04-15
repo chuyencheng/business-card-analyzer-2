@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 
 # 讀取金鑰設定
 load_dotenv()
-AZURE_KEY = os.getenv("792KXnIelhRxirAZiJAI3hPCu6sB1ggHYrLwFEINQbQxCKPtDLJBJQQJ99BDACYeBjFXJ3w3AAALACOGmQC3")
-AZURE_ENDPOINT = os.getenv("https://chuyen-documentintelligence.cognitiveservices.azure.com/")
+AZURE_KEY = os.getenv("AZURE_KEY")
+AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT")
 MODEL_URL = f"{AZURE_ENDPOINT}formrecognizer/documentModels/prebuilt-businessCard:analyze?api-version=2023-07-31"
 
 st.set_page_config(page_title="名片辨識預覽", layout="centered")
