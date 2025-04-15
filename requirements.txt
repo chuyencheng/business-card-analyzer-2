@@ -1,0 +1,6 @@
+streamlit
+pandas
+python-dotenv
+azure-ai-formrecognizer
+openpyxl
+Pillow
