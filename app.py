@@ -52,17 +52,34 @@ if uploaded_file:
 
         # 解析欄位資料
         fields = result_json["analyzeResult"]["documents"][0]["fields"]
-        def get_field(name):
-            return fields.get(name, {}).get("valueString", "")
+      def extract_value(field):
+    if "valueString" in field:
+        return field["valueString"]
+    elif "valuePhoneNumber" in field:
+        return field["valuePhoneNumber"]
+    elif "valueArray" in field:
+        return ", ".join([extract_value(item) for item in field["valueArray"]])
+    elif "valueObject" in field:
+        return str(field["valueObject"])
+    else:
+        return ""
 
-        data = {
-            "FirstName": get_field("ContactNames") and fields["ContactNames"]["valueArray"][0]["valueObject"].get("firstName", {}).get("valueString", ""),
-            "LastName": get_field("ContactNames") and fields["ContactNames"]["valueArray"][0]["valueObject"].get("lastName", {}).get("valueString", ""),
-            "Company": get_field("CompanyNames"),
-            "JobTitle": get_field("JobTitles"),
-            "Email": get_field("Emails"),
-            "Phone": get_field("MobilePhones") or get_field("WorkPhones")
-        }
+def extract_nested_field(array_field, key):
+    try:
+        return array_field["valueArray"][0]["valueObject"].get(key, {}).get("valueString", "")
+    except:
+        return ""
+
+fields = result_json["analyzeResult"]["documents"][0]["fields"]
+data = {
+    "FirstName": extract_nested_field(fields.get("ContactNames", {}), "firstName"),
+    "LastName": extract_nested_field(fields.get("ContactNames", {}), "lastName"),
+    "Company": extract_value(fields.get("CompanyNames", {})),
+    "JobTitle": extract_value(fields.get("JobTitles", {})),
+    "Email": extract_value(fields.get("Emails", {})),
+    "Phone": extract_value(fields.get("MobilePhones", {})) or extract_value(fields.get("WorkPhones", {})),
+}
+
 
         df = pd.DataFrame([data])
         st.success("🎉 分析完成！")
